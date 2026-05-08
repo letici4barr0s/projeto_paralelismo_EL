@@ -1,1 +1,0 @@
-# projeto_paralelismo_EL

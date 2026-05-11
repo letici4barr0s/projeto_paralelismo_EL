@@ -6,110 +6,380 @@ try:
 except ImportError:
     NUMBA_AVAILABLE = False
 
+
+# ======================================================
+# ESTADOS DAS CÉLULAS
+# ======================================================
+
 VAZIO = 0
 ARVORE = 1
 FOGO = 2
 QUEIMADO = 3
 
 
+# ======================================================
+# ATUALIZAÇÃO SEQUENCIAL
+# ======================================================
+
 def atualizar_sequencial(grade, probabilidade):
-    """Atualiza a grade inteira usando operações NumPy vetorizadas."""
+    """
+    Atualiza a grade inteira usando propagação
+    menos previsível e mais orgânica.
+    """
+
     altura, largura = grade.shape
+
     proximo = grade.copy()
 
+    # Gerar vento aleatório para tornar propagação menos simétrica
+    vento = {}
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            if dy == 0 and dx == 0:
+                continue
+            vento[(dx, dy)] = np.random.uniform(0.3, 2.0)  # Fator mais variável
+
+    # Gerar ruído por célula para mais caos
+    ruido = np.random.uniform(0.5, 1.5, size=(altura, largura))
+
+    # Gerar terreno variável para quebrar simetria global
+    terreno = np.random.uniform(0.5, 1.5, size=(altura, largura))
+
+    # ===============================
+    # FOGO -> QUEIMADO
+    # ===============================
+
     fogo = grade == FOGO
+
     proximo[fogo] = QUEIMADO
 
-    padded = np.pad(fogo, ((1, 1), (1, 1)), constant_values=False)
-    vizinhos_em_chamas = (
-        padded[:-2, 1:-1]
-        | padded[2:, 1:-1]
-        | padded[1:-1, :-2]
-        | padded[1:-1, 2:]
-        | padded[:-2, :-2]
-        | padded[:-2, 2:]
-        | padded[2:, :-2]
-        | padded[2:, 2:]
-    )
+    # ==================================================
+    # PROCESSA ÁRVORES
+    # ==================================================
 
-    incendiar = (grade == ARVORE) & vizinhos_em_chamas
-    rand = np.random.random(size=grade.shape)
-    proximo[incendiar & (rand < probabilidade)] = FOGO
+    for y in range(altura):
+
+        for x in range(largura):
+
+            if grade[y, x] != ARVORE:
+                continue
+
+            influencia_fogo = 0.0
+
+            # ==========================================
+            # ANALISA VIZINHOS
+            # ==========================================
+
+            for dy in (-1, 0, 1):
+
+                for dx in (-1, 0, 1):
+
+                    if dy == 0 and dx == 0:
+                        continue
+
+                    ny = y + dy
+                    nx = x + dx
+
+                    if 0 <= ny < altura and 0 <= nx < largura:
+
+                        if grade[ny, nx] == FOGO:
+
+                            # ==========================
+                            # PESO DIRECIONAL
+                            # ==========================
+
+                            # diagonais propagam menos
+                            if dx != 0 and dy != 0:
+                                peso = 0.55
+                            # laterais propagam mais
+                            else:
+                                peso = 1.0
+
+                            # Aplicar vento aleatório
+                            peso *= vento[(dx, dy)]
+
+                            influencia_fogo += peso
+
+            # ==========================================
+            # PROPAGAÇÃO ORGÂNICA
+            # ==========================================
+
+            if influencia_fogo > 0:
+
+                # aleatoriedade local maior
+                variacao = np.random.uniform(0.5, 1.5)
+
+                chance = (
+                    probabilidade
+                    * (influencia_fogo / 4.0)
+                    * variacao
+                )
+
+                # Aplicar ruído local
+                chance *= ruido[y, x]
+
+                # Aplicar terreno variável
+                chance *= terreno[y, x]
+
+                # limite máximo
+                chance = min(chance, 1.0)
+
+                if np.random.random() < chance:
+                    proximo[y, x] = FOGO
+
     return proximo
 
 
-def _atualizar_faixa_numpy(source, dest, y0, y1, probabilidade):
-    """Atualiza uma faixa de linhas [y0:y1) sem copiar a grade inteira."""
+# ======================================================
+# ATUALIZAÇÃO PARALELA NUMPY
+# ======================================================
+
+def _atualizar_faixa_numpy(
+    source,
+    dest,
+    y0,
+    y1,
+    probabilidade
+):
+    """
+    Atualiza apenas uma faixa da matriz.
+    """
+
     altura, largura = source.shape
-    linhas = y1 - y0
-    if linhas <= 0:
+
+    if y1 <= y0:
         return
 
-    bloco_fogo = np.zeros((linhas + 2, largura), dtype=bool)
-    bloco_fogo[1:-1] = source[y0:y1] == FOGO
+    # Gerar vento aleatório para tornar propagação menos simétrica
+    vento = {}
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            if dy == 0 and dx == 0:
+                continue
+            vento[(dx, dy)] = np.random.uniform(0.3, 2.0)  # Fator mais variável
 
-    if y0 > 0:
-        bloco_fogo[0] = source[y0 - 1] == FOGO
-    if y1 < altura:
-        bloco_fogo[-1] = source[y1] == FOGO
+    # Gerar ruído por célula para a faixa
+    ruido = np.random.uniform(0.5, 1.5, size=(y1 - y0, largura))
 
-    bloco_padded = np.pad(bloco_fogo, ((0, 0), (1, 1)), constant_values=False)
-    vizinhos = (
-        bloco_padded[:-2, 1:-1]
-        | bloco_padded[2:, 1:-1]
-        | bloco_padded[1:-1, :-2]
-        | bloco_padded[1:-1, 2:]
-        | bloco_padded[:-2, :-2]
-        | bloco_padded[:-2, 2:]
-        | bloco_padded[2:, :-2]
-        | bloco_padded[2:, 2:]
-    )
+    # Gerar terreno variável para a faixa
+    terreno = np.random.uniform(0.5, 1.5, size=(y1 - y0, largura))
+
+    origem = source[y0:y1]
 
     destino = dest[y0:y1]
-    origem = source[y0:y1]
+
+    # copia estado atual
     destino[:] = origem
-    queima = origem == FOGO
-    destino[queima] = QUEIMADO
 
-    incendiar = (origem == ARVORE) & vizinhos
-    if probabilidade > 0:
-        rand = np.random.random(size=incendiar.shape)
-        destino[incendiar & (rand < probabilidade)] = FOGO
+    # ==========================================
+    # FOGO -> QUEIMADO
+    # ==========================================
+
+    queimando = origem == FOGO
+
+    destino[queimando] = QUEIMADO
+
+    # ==========================================
+    # PROCESSAMENTO DAS ÁRVORES
+    # ==========================================
+
+    # Gerar lista de posições em ordem aleatória para quebrar simetria
+    num_celulas = (y1 - y0) * largura
+    indices = np.arange(num_celulas)
+    np.random.shuffle(indices)
+
+    for idx in indices:
+        y_local = idx // largura
+        x = idx % largura
+
+        if origem[y_local, x] != ARVORE:
+            continue
+
+        y_global = y0 + y_local
+
+        influencia_fogo = 0.0
+
+        # ==================================
+        # VIZINHOS
+        # ==================================
+
+        for dy in (-1, 0, 1):
+
+            for dx in (-1, 0, 1):
+
+                if dy == 0 and dx == 0:
+                    continue
+
+                ny = y_global + dy
+                nx = x + dx
+
+                if 0 <= ny < altura and 0 <= nx < largura:
+
+                    if source[ny, nx] == FOGO:
+
+                        # diagonais possuem menos força
+                        if dx != 0 and dy != 0:
+                            peso = 0.55
+                        else:
+                            peso = 1.0
+
+                        # Aplicar vento aleatório
+                        peso *= vento[(dx, dy)]
+
+                        influencia_fogo += peso
+
+        # ==================================
+        # CHANCE ORGÂNICA
+        # ==================================
+
+        if influencia_fogo > 0:
+
+            variacao = np.random.uniform(
+                0.5,
+                1.5
+            )
+
+            chance = (
+                probabilidade
+                * (influencia_fogo / 4.0)
+                * variacao
+            )
+
+            # Aplicar ruído local
+            chance *= ruido[y_local, x]
+
+            # Aplicar terreno variável
+            chance *= terreno[y_local, x]
+
+            chance = min(chance, 1.0)
+
+            if np.random.random() < chance:
+
+                destino[y_local, x] = FOGO
 
 
-def _atualizar_faixa_numba(source, dest, y0, y1, probabilidade):
-    raise RuntimeError("Numba não está disponível")
+# ======================================================
+# FALLBACK NUMBA
+# ======================================================
 
+def _atualizar_faixa_numba(
+    source,
+    dest,
+    y0,
+    y1,
+    probabilidade
+):
+    raise RuntimeError(
+        "Numba não está disponível"
+    )
+
+
+# ======================================================
+# IMPLEMENTAÇÃO NUMBA
+# ======================================================
 
 if NUMBA_AVAILABLE:
+
     @njit(nogil=True)
-    def _atualizar_faixa_numba(source, dest, y0, y1, probabilidade):
+    def _atualizar_faixa_numba(
+        source,
+        dest,
+        y0,
+        y1,
+        probabilidade
+    ):
+
         altura, largura = source.shape
+
         for y in range(y0, y1):
+
             for x in range(largura):
+
                 estado = source[y, x]
+
+                # ==================================
+                # FOGO -> QUEIMADO
+                # ==================================
+
                 if estado == FOGO:
+
                     dest[y, x] = QUEIMADO
-                    continue
-                if estado != ARVORE:
-                    dest[y, x] = estado
+
                     continue
 
-                tem_vizinho = False
+                # ==================================
+                # NÃO É ÁRVORE
+                # ==================================
+
+                if estado != ARVORE:
+
+                    dest[y, x] = estado
+
+                    continue
+
+                # ==================================
+                # ANALISA VIZINHOS
+                # ==================================
+
+                influencia_fogo = 0.0
+
                 for dy in (-1, 0, 1):
+
                     for dx in (-1, 0, 1):
+
                         if dy == 0 and dx == 0:
                             continue
+
                         ny = y + dy
                         nx = x + dx
-                        if 0 <= ny < altura and 0 <= nx < largura:
-                            if source[ny, nx] == FOGO:
-                                tem_vizinho = True
-                                break
-                    if tem_vizinho:
-                        break
 
-                if tem_vizinho and np.random.random() < probabilidade:
-                    dest[y, x] = FOGO
+                        if (
+                            0 <= ny < altura
+                            and
+                            0 <= nx < largura
+                        ):
+
+                            if source[ny, nx] == FOGO:
+
+                                # diagonais propagam menos
+                                if dx != 0 and dy != 0:
+                                    peso = 0.55
+
+                                # laterais propagam mais
+                                else:
+                                    peso = 1.0
+
+                                influencia_fogo += peso
+
+                # ==================================
+                # PROPAGAÇÃO MAIS NATURAL
+                # ==================================
+
+                if influencia_fogo > 0:
+
+                    # variação local
+                    variacao = (
+                        0.7 +
+                        np.random.random() * 0.6
+                    )
+
+                    chance = (
+                        probabilidade
+                        * (0.45 + influencia_fogo / 1.5)
+                        * variacao
+                    )
+
+                    if chance > 1.0:
+                        chance = 1.0
+
+                    if np.random.random() < chance:
+
+                        dest[y, x] = FOGO
+
+                    else:
+
+                        dest[y, x] = ARVORE
+
                 else:
+
                     dest[y, x] = ARVORE

@@ -125,10 +125,10 @@ if __name__ == "__main__":
         except ValueError:
             print("Por favor, digite um número válido.")
 
-    LARGURA = 300
-    ALTURA = 300
+    LARGURA = 1000
+    ALTURA = 1000
     DENSIDADE = 0.75
-    PROB_FOGO = 0.35
+    PROB_FOGO = 1.0
     NUM_PASSOS = 100
 
     simular(LARGURA, ALTURA, DENSIDADE, PROB_FOGO, num_proc, NUM_PASSOS, modo="paralelo")

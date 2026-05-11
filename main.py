@@ -1,21 +1,26 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+
 from matplotlib.widgets import Button
+from matplotlib.gridspec import GridSpec
+from matplotlib.patches import Patch
+
 import time
+
 from multiprocessing import freeze_support, cpu_count
 
-from floresta import criar_floresta, FOGO, QUEIMADO
-
+from floresta import criar_floresta,ARVORE, FOGO, QUEIMADO
 from paralelo import SimuladorParalelo
+
 
 # ================= CONFIGURAÇÕES =================
 
-LARGURA = 300
-ALTURA = 300
+LARGURA = 1000
+ALTURA = 1000
 
 DENSIDADE = 0.75
-PROB_FOGO = 0.35
+PROB_FOGO = 0.7
 
 # Quantos passos executar antes de redesenhar
 VISUALIZACAO_PASSOS = 3
@@ -23,21 +28,30 @@ VISUALIZACAO_PASSOS = 3
 # Intervalo da animação (ms)
 INTERVALO_ANIMACAO = 120
 
+
 # ================= ESCOLHER NÚCLEOS =================
 
 max_nucleos = cpu_count()
 
-N_PROC = min(4, max_nucleos)  # Usar 4 por padrão, ou menos se disponível
+if max_nucleos <= 4:
+    N_PROC = max_nucleos
+else:
+    N_PROC = max_nucleos - 2
+
 
 # ================= CORES =================
 
 CMAP = plt.cm.colors.ListedColormap([
     '#111111',  # vazio
-    '#2d7a2d',  # árvore
-    '#e85c1b',  # fogo
+    '#075207',  # árvore
+    '#df5313',  # fogo
     '#666666'   # queimado
 ])
 
+
+# ======================================================
+# CLASSE PRINCIPAL
+# ======================================================
 
 class SimuladorIncendio:
 
@@ -55,7 +69,10 @@ class SimuladorIncendio:
         self.tempo_inicio = None
 
         # Inicializa simulador paralelo
-        self.simulador_paralelo = SimuladorParalelo(self.grade, N_PROC)
+        self.simulador_paralelo = SimuladorParalelo(
+            self.grade,
+            N_PROC
+        )
 
         # Monta interface
         self._montar_interface()
@@ -64,18 +81,25 @@ class SimuladorIncendio:
 
     def _montar_interface(self):
 
-        self.fig, self.ax = plt.subplots(
-            figsize=(9, 8)
+        # Figura principal
+        self.fig = plt.figure(figsize=(13, 8))
+
+        # Layout da tela
+        gs = GridSpec(
+            2,
+            2,
+            figure=self.fig,
+            width_ratios=[4.5, 1.5],
+            height_ratios=[12, 1]
         )
 
-        # Espaço para botão e texto
-        plt.subplots_adjust(
-            top=0.88,
-            bottom=0.12
-        )
+        # ==================================================
+        # ÁREA DA GRADE
+        # ==================================================
 
-        # Imagem principal
-        self.imagem = self.ax.imshow(
+        self.ax_grade = self.fig.add_subplot(gs[0, 0])
+
+        self.imagem = self.ax_grade.imshow(
             self.grade,
             cmap=CMAP,
             vmin=0,
@@ -83,31 +107,44 @@ class SimuladorIncendio:
             interpolation='nearest'
         )
 
-        # Título
-        self.ax.set_title(
+        self.ax_grade.set_title(
             'Simulação de Incêndio Florestal',
             fontsize=16,
             pad=15
         )
 
-        self.ax.axis('off')
+        self.ax_grade.axis('off')
 
-        # Texto inferior
-        self.texto_status = self.fig.text(
+        # ==================================================
+        # PAINEL LATERAL
+        # ==================================================
+
+        self.ax_painel = self.fig.add_subplot(gs[0, 1])
+
+        self.ax_painel.axis('off')
+
+        # Fundo visual do painel
+        self.ax_painel.set_facecolor('#f0f0f0')
+
+        # ==================================================
+        # BLOCO CONTROLES
+        # ==================================================
+
+        self.ax_painel.text(
             0.5,
-            0.04,
-            'Pressione INICIAR',
+            0.92,
+            'CONTROLES',
             ha='center',
-            fontsize=11
+            fontsize=14,
+            fontweight='bold'
         )
 
-        # ================= BOTÃO =================
-
-        ax_btn = plt.axes([
-            0.40,  # esquerda
-            0.91,  # altura
-            0.20,  # largura
-            0.05   # altura
+        # Área do botão
+        ax_btn = self.fig.add_axes([
+            0.76,   # esquerda
+            0.72,   # altura
+            0.16,   # largura
+            0.07    # altura
         ])
 
         self.btn = Button(
@@ -122,6 +159,60 @@ class SimuladorIncendio:
 
         self.btn.on_clicked(self._iniciar)
 
+        # ==================================================
+        # BLOCO STATUS
+        # ==================================================
+
+        self.ax_painel.text(
+            0.5,
+            0.55,
+            'STATUS',
+            ha='center',
+            fontsize=14,
+            fontweight='bold'
+        )
+
+        self.status_texto = self.ax_painel.text(
+            0.08,
+            0.42,
+            f'Núcleos utilizados: {N_PROC}\n\n'
+            f'Tempo de execução: --',
+            fontsize=11,
+            va='top'
+        )
+
+        # ==================================================
+        # LEGENDA
+        # ==================================================
+
+        self.ax_legenda = self.fig.add_subplot(gs[1, :])
+
+        self.ax_legenda.axis('off')
+
+        legendas = [
+            Patch(color='#111111', label='Vazio'),
+            Patch(color='#075207', label='Árvore'),
+            Patch(color='#df5313', label='Fogo'),
+            Patch(color='#666666', label='Queimado')
+        ]
+
+        self.ax_legenda.legend(
+            handles=legendas,
+            loc='center',
+            ncol=4,
+            frameon=False,
+            fontsize=11
+        )
+
+        # Ajuste geral
+        plt.subplots_adjust(
+            left=0.03,
+            right=0.97,
+            top=0.92,
+            bottom=0.06,
+            wspace=0.08
+        )
+
     # ==================================================
 
     def _iniciar(self, evento):
@@ -135,8 +226,7 @@ class SimuladorIncendio:
 
         self.btn.label.set_text('EXECUTANDO')
 
-        # IMPORTANTE:
-        # manter referência salva
+        # Cria animação
         self.animacao = animation.FuncAnimation(
             self.fig,
             self._atualizar,
@@ -154,36 +244,34 @@ class SimuladorIncendio:
         if not self.rodando:
             return
 
-        # Executa vários passos antes de redesenhar
+        # Executa vários passos internos
         for _ in range(VISUALIZACAO_PASSOS):
 
             self.simulador_paralelo.step(PROB_FOGO)
-            self.grade = self.simulador_paralelo.current_grid()
+
+            self.grade = (
+                self.simulador_paralelo.current_grid()
+            )
 
             self.passo += 1
 
         # Atualiza imagem
         self.imagem.set_data(self.grade)
 
-        # Estatísticas
+        # Conta células em chamas
         em_chamas = np.sum(
             self.grade == FOGO
         )
 
-        queimadas = np.sum(
-            self.grade == QUEIMADO
+        # ==================================================
+        # FINALIZAÇÃO
+        # ==================================================
+
+        arvores_restantes = np.sum(
+            self.grade == ARVORE
         )
 
-        # Atualiza texto
-        self.texto_status.set_text(
-            f'Passo: {self.passo}   |   '
-            f'🔥 {em_chamas:,}   |   '
-            f'⬛ {queimadas:,}'
-        )
-
-        # ================= FINALIZAÇÃO =================
-
-        if em_chamas == 0:
+        if arvores_restantes == 0 or em_chamas == 0:
 
             self.rodando = False
 
@@ -191,15 +279,19 @@ class SimuladorIncendio:
                 time.time() - self.tempo_inicio
             )
 
+            # Atualiza botão
             self.btn.label.set_text(
                 'FINALIZADO'
             )
 
-            self.texto_status.set_text(
-                f'✅ Concluído em '
-                f'{tempo_total:.2f}s'
+            # Atualiza status
+            self.status_texto.set_text(
+                f'Núcleos utilizados: {N_PROC}\n\n'
+                f'Tempo de execução:\n'
+                f'{tempo_total:.2f} segundos'
             )
 
+            # Para animação
             self.animacao.event_source.stop()
 
         return [self.imagem]

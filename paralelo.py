@@ -55,12 +55,18 @@ class SimuladorParalelo:
     def step(self, probabilidade):
         tarefas = []
         altura = self.altura
-        fatia = altura // self.num_processos
+
+        # Dividir em faixas de tamanho variável para mais caos
+        pontos = np.sort(np.random.choice(range(1, altura), self.num_processos - 1, replace=False))
+        pontos = np.concatenate([[0], pontos, [altura]])
 
         for i in range(self.num_processos):
-            y0 = i * fatia
-            y1 = altura if i == self.num_processos - 1 else (i + 1) * fatia
+            y0 = pontos[i]
+            y1 = pontos[i + 1]
             tarefas.append((y0, y1, probabilidade, self._current_buffer))
+
+        # Embaralhar tarefas
+        np.random.shuffle(tarefas)
 
         self._pool.map(_processar_faixa, tarefas)
         self._current_buffer ^= 1

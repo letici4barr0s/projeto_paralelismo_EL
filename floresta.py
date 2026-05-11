@@ -14,5 +14,9 @@ def criar_floresta(largura, altura, densidade=0.75, semente=None):
         size=(altura, largura),
         p=[1 - densidade, densidade],
     ).astype(np.uint8)
-    grade[altura // 4 : 3 * altura // 4, 0] = FOGO
+
+    # Ponto inicial do fogo
+    linha_inicio = altura // 2
+    coluna_inicio = largura - 1
+    grade[linha_inicio, coluna_inicio] = FOGO
     return grade

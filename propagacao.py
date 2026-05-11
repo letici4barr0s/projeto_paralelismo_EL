@@ -1,33 +1,115 @@
 import numpy as np
-from floresta import ARVORE, FOGO, QUEIMADO
 
-def processar_faixa(args):
-    """
-    Processa uma fatia horizontal da grade.
-    Cada processo recebe: (grade_completa, y_inicio, y_fim, probabilidade)
-    Retorna apenas a fatia atualizada.
-    """
-    grade, y_inicio, y_fim, prob = args
+try:
+    from numba import njit
+    NUMBA_AVAILABLE = True
+except ImportError:
+    NUMBA_AVAILABLE = False
+
+VAZIO = 0
+ARVORE = 1
+FOGO = 2
+QUEIMADO = 3
+
+
+def atualizar_sequencial(grade, probabilidade):
+    """Atualiza a grade inteira usando operações NumPy vetorizadas."""
     altura, largura = grade.shape
-    faixa = grade[y_inicio:y_fim, :].copy()
+    proximo = grade.copy()
 
-    for y_local in range(y_fim - y_inicio):
-        y_global = y_inicio + y_local
-        for x in range(largura):
-            if grade[y_global, x] == FOGO:
-                # Célula atual vira queimada
-                faixa[y_local, x] = QUEIMADO
-                # Verifica os 8 vizinhos
-                for dy in [-1, 0, 1]:
-                    for dx in [-1, 0, 1]:
+    fogo = grade == FOGO
+    proximo[fogo] = QUEIMADO
+
+    padded = np.pad(fogo, ((1, 1), (1, 1)), constant_values=False)
+    vizinhos_em_chamas = (
+        padded[:-2, 1:-1]
+        | padded[2:, 1:-1]
+        | padded[1:-1, :-2]
+        | padded[1:-1, 2:]
+        | padded[:-2, :-2]
+        | padded[:-2, 2:]
+        | padded[2:, :-2]
+        | padded[2:, 2:]
+    )
+
+    incendiar = (grade == ARVORE) & vizinhos_em_chamas
+    rand = np.random.random(size=grade.shape)
+    proximo[incendiar & (rand < probabilidade)] = FOGO
+    return proximo
+
+
+def _atualizar_faixa_numpy(source, dest, y0, y1, probabilidade):
+    """Atualiza uma faixa de linhas [y0:y1) sem copiar a grade inteira."""
+    altura, largura = source.shape
+    linhas = y1 - y0
+    if linhas <= 0:
+        return
+
+    bloco_fogo = np.zeros((linhas + 2, largura), dtype=bool)
+    bloco_fogo[1:-1] = source[y0:y1] == FOGO
+
+    if y0 > 0:
+        bloco_fogo[0] = source[y0 - 1] == FOGO
+    if y1 < altura:
+        bloco_fogo[-1] = source[y1] == FOGO
+
+    bloco_padded = np.pad(bloco_fogo, ((0, 0), (1, 1)), constant_values=False)
+    vizinhos = (
+        bloco_padded[:-2, 1:-1]
+        | bloco_padded[2:, 1:-1]
+        | bloco_padded[1:-1, :-2]
+        | bloco_padded[1:-1, 2:]
+        | bloco_padded[:-2, :-2]
+        | bloco_padded[:-2, 2:]
+        | bloco_padded[2:, :-2]
+        | bloco_padded[2:, 2:]
+    )
+
+    destino = dest[y0:y1]
+    origem = source[y0:y1]
+    destino[:] = origem
+    queima = origem == FOGO
+    destino[queima] = QUEIMADO
+
+    incendiar = (origem == ARVORE) & vizinhos
+    if probabilidade > 0:
+        rand = np.random.random(size=incendiar.shape)
+        destino[incendiar & (rand < probabilidade)] = FOGO
+
+
+def _atualizar_faixa_numba(source, dest, y0, y1, probabilidade):
+    raise RuntimeError("Numba não está disponível")
+
+
+if NUMBA_AVAILABLE:
+    @njit(nogil=True)
+    def _atualizar_faixa_numba(source, dest, y0, y1, probabilidade):
+        altura, largura = source.shape
+        for y in range(y0, y1):
+            for x in range(largura):
+                estado = source[y, x]
+                if estado == FOGO:
+                    dest[y, x] = QUEIMADO
+                    continue
+                if estado != ARVORE:
+                    dest[y, x] = estado
+                    continue
+
+                tem_vizinho = False
+                for dy in (-1, 0, 1):
+                    for dx in (-1, 0, 1):
                         if dy == 0 and dx == 0:
                             continue
-                        ny, nx = y_global + dy, x + dx
+                        ny = y + dy
+                        nx = x + dx
                         if 0 <= ny < altura and 0 <= nx < largura:
-                            if grade[ny, nx] == ARVORE:
-                                if np.random.random() < prob:
-                                    # Marca na faixa se pertence a ela
-                                    ly = ny - y_inicio
-                                    if 0 <= ly < (y_fim - y_inicio):
-                                        faixa[ly, nx] = FOGO
-    return (y_inicio, y_fim, faixa)
+                            if source[ny, nx] == FOGO:
+                                tem_vizinho = True
+                                break
+                    if tem_vizinho:
+                        break
+
+                if tem_vizinho and np.random.random() < probabilidade:
+                    dest[y, x] = FOGO
+                else:
+                    dest[y, x] = ARVORE

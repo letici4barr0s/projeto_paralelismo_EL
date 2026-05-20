@@ -15,16 +15,4 @@ A cada passo da simulação, o fogo pode se propagar para árvores vizinhas com 
 
 ---
 
-## Estrutura do projeto
 
-```text
-simulacao_incendio/
-├─ backend/
-│  ├─ simulador.py
-│  └─ simulador_mpi.py
-├─ frontend/
-│  ├─ app.py
-│  └─ logo_fireguard.svg
-├─ benchmark.py
-├─ requirements.txt
-└─ resultado_benchmark.txt (opcional)

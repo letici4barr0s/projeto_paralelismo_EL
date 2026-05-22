@@ -374,8 +374,8 @@ if __name__ == "__main__":
     # CONFIGURAÇÕES
     # ==========================================
 
-    LARGURA = 1000
-    ALTURA = 1000
+    LARGURA = 7000
+    ALTURA = 7000
 
     DENSIDADE = 1.0
 

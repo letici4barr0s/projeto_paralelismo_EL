@@ -42,17 +42,6 @@ python3 simulador_cli.py
 
 O programa pergunta quantos núcleos usar e executa a simulação em modo paralelo por padrão.
 
-### 2) Interface gráfica Matplotlib
-
-```bash
-python3 main.py
-```
-
-Abre uma janela com animação da grade e painel de status.
-
-
-Abre uma interface web com controles, métricas e gráficos.
-
 ## Modelo da simulação
 
 Estados por célula:

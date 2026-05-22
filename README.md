@@ -3,8 +3,7 @@
 Simulador de propagação de incêndio em grade 2D com foco em desempenho, incluindo:
 - execução sequencial (NumPy),
 - execução paralela com `multiprocessing` + `shared_memory`,
-- interface gráfica local com Matplotlib,
-- interface web com Streamlit.
+- execução via terminal (simulador_cli.py)
 
 ## Objetivo do projeto
 
@@ -16,7 +15,6 @@ Modelar a propagação do fogo em uma floresta discretizada, comparando desempen
 - `propagacao.py`: regras de atualização e kernels (NumPy e Numba opcional).
 - `paralelo.py`: coordenação paralela com `Pool` e double buffering em memória compartilhada.
 - `simulador_cli.py`: execução em terminal + benchmark.
-- `main.py`: interface visual com Matplotlib (animação local).
 
 ## Requisitos
 

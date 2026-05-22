@@ -71,6 +71,10 @@ Dinâmica geral:
 | 7000x7000 | 200 | 1,2,4,8,10 | 31.911s | 8.038s | 10 | 3.97x |
 | 10000x10000 | 200 | 1,2,4,8,10 | 77.431s | 13.698s | 8 | 5.65x |
 
+### Speedup máximo por grade (200 passos)
+
+![Speedup máximo por grade](assets/benchmark_speedup_200passos.png)
+
 Os resultados mostram que o benefício do paralelismo depende diretamente do tamanho da grade:
 
 - Em **1000x1000**, o ganho foi pequeno (**speedup máximo de 1.09x com 4 núcleos**), indicando que o overhead de criação/sincronização de processos quase anula a vantagem paralela.

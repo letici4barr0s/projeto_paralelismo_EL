@@ -29,7 +29,6 @@ Modelar a propagação do fogo em uma floresta discretizada, comparando desempen
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install numpy matplotlib streamlit numba
 ```
 
 ## Como executar
@@ -106,7 +105,7 @@ Todos os testes abaixo foram executados com **10 núcleos** no modo paralelo.
 
 ![Tempo médio por passo](assets/benchmark_tempo_por_passo_10nucleos.png)
 
-## Interpretação dos resultados
+## Conclusões
 
 - O tempo cresce de forma consistente com o aumento da grade e dos passos.
 - Em grades muito grandes, o custo de memória e sincronização fica dominante.

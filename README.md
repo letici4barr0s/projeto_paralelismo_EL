@@ -1,5 +1,7 @@
 # Simulação de Incêndio Florestal
 
+**Autoras:** Ellen Vitorino e Letícia Oliveira
+
 Simulador de propagação de incêndio em grade 2D com foco em desempenho, incluindo:
 - execução sequencial (NumPy),
 - execução paralela com `multiprocessing` + `shared_memory`,

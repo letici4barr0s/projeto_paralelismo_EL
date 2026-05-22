@@ -17,7 +17,6 @@ Modelar a propagação do fogo em uma floresta discretizada, comparando desempen
 - `paralelo.py`: coordenação paralela com `Pool` e double buffering em memória compartilhada.
 - `simulador_cli.py`: execução em terminal + benchmark.
 - `main.py`: interface visual com Matplotlib (animação local).
-- `front.py`: front web profissional com Streamlit.
 
 ## Requisitos
 
@@ -25,7 +24,6 @@ Modelar a propagação do fogo em uma floresta discretizada, comparando desempen
 - Dependências:
   - `numpy`
   - `matplotlib`
-  - `streamlit`
   - `numba` (opcional, recomendado para acelerar kernel)
 
 ## Instalação

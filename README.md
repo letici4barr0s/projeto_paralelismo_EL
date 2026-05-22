@@ -73,6 +73,12 @@ Dinâmica geral:
 - Divisão da grade em faixas de linhas por processo.
 - Suporte a Numba no kernel quando disponível.
 
+##  Ambiente de execução
+- Máquina: MacBook Air M5
+-Núcleos usados nos testes: 10
+-Sistema: macOS
+-Python: 3.14.3 (venv)
+
 ## Benchmark (10 núcleos)
 
 Todos os testes abaixo foram executados com **10 núcleos** no modo paralelo.

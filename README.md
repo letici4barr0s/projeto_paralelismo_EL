@@ -115,6 +115,19 @@ Todos os testes abaixo foram executados com **10 núcleos** no modo paralelo.
 - Para testes intermediários: `5000x5000` ou `7000x7000`.
 - Para carga alta: `10000x10000` com maior tempo de execução.
 
+## Limitações e próximos passos
+
+### Limitações atuais
+- O modelo usa regras locais simplificadas de propagação e não representa todos os fenômenos físicos reais.
+- Em grades muito grandes, o custo de memória e sincronização entre processos cresce de forma significativa.
+- O ganho de paralelismo depende do hardware e do balanceamento das faixas processadas.
+
+### Próximos passos
+- Comparar formalmente o modo sequencial e o paralelo no mesmo conjunto de cenários.
+- Medir speedup e eficiência paralela por número de núcleos (1, 2, 4, 8, 10).
+- Avaliar estratégias de particionamento para reduzir overhead de sincronização.
+- Incluir exportação automática dos resultados de benchmark para arquivo CSV.
+
 ---
 
 Projeto voltado a estudo de paralelismo, modelagem em grade e análise de desempenho computacional.

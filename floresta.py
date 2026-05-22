@@ -16,7 +16,6 @@ def criar_floresta(largura, altura, densidade=0.75, semente=None):
     ).astype(np.uint8)
 
     # Ponto inicial do fogo
-    linha_inicio = altura // 2
-    coluna_inicio = largura - 1
-    grade[linha_inicio, coluna_inicio] = FOGO
+    # Incendia toda a borda esquerda
+    grade[:, 0][grade[:, 0] == ARVORE] = FOGO
     return grade

@@ -20,14 +20,14 @@ def _worker_init(name_a, name_b, altura, largura):
     _worker_b = np.ndarray((altura, largura), dtype=np.uint8, buffer=_shm_b.buf)
 
 
-def _processar_faixa(args):
-    y0, y1, probabilidade, buffer_id = args
+def _processar_faixa(y0, y1, probabilidade, buffer_id):
     source = _worker_a if buffer_id == 0 else _worker_b
     dest = _worker_b if buffer_id == 0 else _worker_a
 
     if NUMBA_AVAILABLE:
         _atualizar_faixa_numba(source, dest, y0, y1, probabilidade)
     else:
+        # Agora o _atualizar_faixa_numpy aponta para a função limpa sem loops pesados em Python
         _atualizar_faixa_numpy(source, dest, y0, y1, probabilidade)
 
 
@@ -54,21 +54,25 @@ class SimuladorParalelo:
 
     def step(self, probabilidade):
         tarefas = []
-        altura = self.altura
 
-        # Dividir em faixas de tamanho variável para mais caos
-        pontos = np.sort(np.random.choice(range(1, altura), self.num_processos - 1, replace=False))
-        pontos = np.concatenate([[0], pontos, [altura]])
+        chunk = self.altura // self.num_processos
 
         for i in range(self.num_processos):
-            y0 = pontos[i]
-            y1 = pontos[i + 1]
-            tarefas.append((y0, y1, probabilidade, self._current_buffer))
+            y0 = i * chunk
 
-        # Embaralhar tarefas
-        np.random.shuffle(tarefas)
+            # último processo pega o restante
+            if i == self.num_processos - 1:
+                y1 = self.altura
+            else:
+                y1 = (i + 1) * chunk
 
-        self._pool.map(_processar_faixa, tarefas)
+            tarefas.append(
+                (y0, y1, probabilidade, self._current_buffer)
+            )
+
+        self._pool.starmap(_processar_faixa, tarefas)
+
+        # alterna buffers
         self._current_buffer ^= 1
 
     def current_grid(self, copy=False):

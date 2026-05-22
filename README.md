@@ -54,13 +54,6 @@ python3 main.py
 
 Abre uma janela com animação da grade e painel de status.
 
-### 3) Front web (Streamlit)
-
-```bash
-streamlit run front.py
-```
-
-Abre uma interface web com controles, métricas e gráficos.
 
 ## Modelo da simulação
 

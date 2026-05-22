@@ -17,6 +17,7 @@ Modelar a propagação do fogo em uma floresta discretizada, comparando desempen
 - `paralelo.py`: coordenação paralela com `Pool` e double buffering em memória compartilhada.
 - `simulador_cli.py`: execução em terminal + benchmark.
 - `main.py`: interface visual com Matplotlib (animação local).
+- `front.py`: front web profissional com Streamlit.
 
 ## Requisitos
 
@@ -24,6 +25,7 @@ Modelar a propagação do fogo em uma floresta discretizada, comparando desempen
 - Dependências:
   - `numpy`
   - `matplotlib`
+  - `streamlit`
   - `numba` (opcional, recomendado para acelerar kernel)
 
 ## Instalação
@@ -52,6 +54,13 @@ python3 main.py
 
 Abre uma janela com animação da grade e painel de status.
 
+### 3) Front web (Streamlit)
+
+```bash
+streamlit run front.py
+```
+
+Abre uma interface web com controles, métricas e gráficos.
 
 ## Modelo da simulação
 
@@ -72,15 +81,6 @@ Dinâmica geral:
 - Double buffering real (`buffer A`/`buffer B`) alternado a cada passo.
 - Divisão da grade em faixas de linhas por processo.
 - Suporte a Numba no kernel quando disponível.
-
-## Ambiente de execução
-
-| Item | Valor |
-|---|---|
-| Máquina | MacBook Air M5 |
-| Núcleos usados nos testes | 10 |
-| Sistema operacional | macOS |
-| Python | 3.14.3 (venv) |
 
 ## Benchmark (10 núcleos)
 
@@ -103,27 +103,6 @@ Todos os testes abaixo foram executados com **10 núcleos** no modo paralelo.
 
 ![Tempo médio por passo](assets/benchmark_tempo_por_passo_10nucleos.png)
 
-## Resumo consolidado dos benchmarks (200 passos)
-
-| Grade | Passos | Núcleos testados | Tempo Sequencial (s) | Melhor tempo Paralelo (s) | Núcleos do melhor paralelo | Speedup máximo |
-|---|---:|---|---:|---:|---:|---:|
-| 1000x1000 | 200 | 1,2,4,8,10 | 0.756s | 0.692s | 4 | 1.09x |
-| 5000x5000 | 200 | 1,2,4,8,10 | 16.197s | 5.626s | 8 | 2.88x |
-| 7000x7000 | 200 | 1,2,4,8,10 | 31.911s | 8.038s | 10 | 3.97x |
-| 10000x10000 | 200 | 1,2,4,8,10 | 77.431s | 13.698s | 8 | 5.65x |
-
-### Análise dos resultados (200 passos)
-
-Os resultados mostram que o benefício do paralelismo depende diretamente do tamanho da grade:
-
-- Em **1000x1000**, o ganho foi pequeno (**speedup máximo de 1.09x com 4 núcleos**), indicando que o overhead de criação/sincronização de processos quase anula a vantagem paralela.
-- Em **5000x5000**, o paralelismo já se torna claramente vantajoso (**2.88x com 8 núcleos**).
-- Em **7000x7000**, o melhor resultado foi com **10 núcleos** (**3.97x**).
-- Em **10000x10000**, ocorreu o maior ganho geral: **5.65x com 8 núcleos**.
-
-Em resumo, **o melhor cenário geral foi a grade 10000x10000**, com o maior speedup observado.  
-Também se nota que, em alguns casos, aumentar de 8 para 10 núcleos não melhora mais o tempo (ou melhora muito pouco), o que sugere saturação por overhead de paralelismo.
-
 ## Interpretação dos resultados
 
 - O tempo cresce de forma consistente com o aumento da grade e dos passos.
@@ -135,8 +114,6 @@ Também se nota que, em alguns casos, aumentar de 8 para 10 núcleos não melhor
 - Para demonstração rápida: `1000x1000`.
 - Para testes intermediários: `5000x5000` ou `7000x7000`.
 - Para carga alta: `10000x10000` com maior tempo de execução.
-
-
 
 ---
 

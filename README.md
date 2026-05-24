@@ -65,12 +65,12 @@ Dinâmica geral:
 
  ## Análise dos resultados (200 passos)
 
-| Grade | Passos | Núcleos testados | Tempo Sequencial (s) | Melhor tempo Paralelo (s) | Núcleos do melhor paralelo | Speedup máximo |
+| Grade | Núcleos testados | Tempo Sequencial (s) | Melhor tempo Paralelo (s) | Núcleos do melhor paralelo | Speedup máximo |
 |---|---:|---|---:|---:|---:|---:|
-| 1000x1000 | 200 | 1,2,4,8,10 | 0.756s | 0.692s | 4 | 1.09x |
-| 5000x5000 | 200 | 1,2,4,8,10 | 16.197s | 5.626s | 8 | 2.88x |
-| 7000x7000 | 200 | 1,2,4,8,10 | 31.911s | 8.038s | 10 | 3.97x |
-| 10000x10000 | 200 | 1,2,4,8,10 | 77.431s | 13.698s | 8 | 5.65x |
+| 1000x1000 | 1,2,4,8,10 | 0.756s | 0.692s | 4 | 1.09x |
+| 5000x5000 | 1,2,4,8,10 | 16.197s | 5.626s | 8 | 2.88x |
+| 7000x7000 | 1,2,4,8,10 | 31.911s | 8.038s | 10 | 3.97x |
+| 10000x10000 | 1,2,4,8,10 | 77.431s | 13.698s | 8 | 5.65x |
 
 ### Speedup máximo por grade (200 passos)
 

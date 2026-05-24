@@ -63,7 +63,7 @@ Dinâmica geral:
 - Divisão da grade em faixas de linhas por processo.
 - Suporte a Numba no kernel quando disponível.
 
- ## Análise dos resultados (200 passos)
+ ## Análise dos resultados 
 
 | Grade | Núcleos testados | Tempo Sequencial (s) | Melhor tempo Paralelo (s) | Núcleos do melhor paralelo | Speedup máximo |
 |---|---|---:|---:|---:|---:|

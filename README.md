@@ -65,6 +65,8 @@ Dinâmica geral:
 
  ## Análise dos resultados 
 
+ Serial/Paralelo
+
 | Grade | Núcleos testados | Tempo Sequencial (s) | Melhor tempo Paralelo (s) | Núcleos do melhor paralelo | Speedup máximo |
 |---|---|---:|---:|---:|---:|
 | 1000x1000 | 1,2,4,8,10 | 0.756s | 0.692s | 4 | 1.09x |

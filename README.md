@@ -63,30 +63,17 @@ Dinâmica geral:
 - Divisão da grade em faixas de linhas por processo.
 - Suporte a Numba no kernel quando disponível.
 
- ## Análise dos resultados 
 
- Serial/Paralelo
+### Comparação Sequencial vs Paralelo (7000x7000, 7000 passos)
 
-| Grade | Núcleos testados | Tempo Sequencial (s) | Melhor tempo Paralelo (s) | Núcleos do melhor paralelo | Speedup máximo |
-|---|---|---:|---:|---:|---:|
-| 1000x1000 | 1,2,4,8,10 | 0.756s | 0.692s | 4 | 1.09x |
-| 5000x5000 | 1,2,4,8,10 | 16.197s | 5.626s | 8 | 2.88x |
-| 7000x7000 | 1,2,4,8,10 | 31.911s | 8.038s | 10 | 3.97x |
-| 10000x10000 | 1,2,4,8,10 | 77.431s | 13.698s | 8 | 5.65x |
-
-### Speedup máximo por grade (200 passos)
-
-![Speedup máximo por grade](assets/benchmark_speedup_200passos.png)
-
-Os resultados mostram que o benefício do paralelismo depende diretamente do tamanho da grade:
-
-- Em **1000x1000**, o ganho foi pequeno (**speedup máximo de 1.09x com 4 núcleos**), indicando que o overhead de criação/sincronização de processos quase anula a vantagem paralela.
-- Em **5000x5000**, o paralelismo já se torna claramente vantajoso (**2.88x com 8 núcleos**).
-- Em **7000x7000**, o melhor resultado foi com **10 núcleos** (**3.97x**).
-- Em **10000x10000**, ocorreu o maior ganho geral: **5.65x com 8 núcleos**.
-
-Em resumo, **o melhor cenário geral foi a grade 10000x10000**, com o maior speedup observado.  
-Também se nota que, em alguns casos, aumentar de 8 para 10 núcleos não melhora mais o tempo (ou melhora muito pouco), o que sugere saturação por overhead de paralelismo.
+| Métrica | Valor |
+|---|---:|
+| Tempo Sequencial (Ts) | 592.06 s |
+| Tempo Paralelo 10 núcleos (Tp) | 270.06 s |
+| Speedup (S = Ts/Tp) | 2.19x |
+| Eficiência (E = S/p, p=10) | 21.9% |
+| Células queimadas | 49.000.000 (100.0%) |
+| Status final | Fogo extinto no passo 7000 |
 
 ## Benchmark (10 núcleos)
 

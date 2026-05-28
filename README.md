@@ -64,17 +64,6 @@ Dinâmica geral:
 - Suporte a Numba no kernel quando disponível.
 
 
-### Comparação Sequencial vs Paralelo (7000x7000, 7000 passos)
-
-| Métrica | Valor |
-|---|---:|
-| Tempo Sequencial (Ts) | 592.06 s |
-| Tempo Paralelo 10 núcleos (Tp) | 270.06 s |
-| Speedup (S = Ts/Tp) | 2.19x |
-| Eficiência (E = S/p, p=10) | 21.9% |
-| Células queimadas | 49.000.000 (100.0%) |
-| Status final | Fogo extinto no passo 7000 |
-
 ## Benchmark (10 núcleos)
 
 Todos os testes abaixo foram executados com **10 núcleos** no modo paralelo.

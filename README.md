@@ -1,7 +1,7 @@
 # Relatório da Atividade: Simulação Paralela de Incêndio Florestal
 
 *Disciplina:* Programação Concorrente e Distribuída  
-*Aluno(s):* Ellen e Letícia de Oliveira Barros  
+*Aluno(s):* Ellen Vitorino e Letícia Barros  
 *Turma:* Sistemas de Informação - 5º semestre  
 *Professor:* Rafael Marconi  
 *Data:* 08/04/2026  

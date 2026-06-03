@@ -20,16 +20,6 @@ A paralelização foi utilizada porque o volume de dados processado é muito gra
 
 O algoritmo utilizado é uma simulação baseada em grade com atualização iterativa por vizinhança. A complexidade aproximada é:
 
-```text
-O(P * H * W)
-```
-
-Onde:
-
-- `P` representa o número de passos executados;
-- `H` representa a altura da matriz;
-- `W` representa a largura da matriz.
-
 Na versão paralela, a matriz é dividida em faixas de linhas. Cada processo atualiza uma parte da floresta, e a comunicação ocorre por meio de memória compartilhada. O objetivo é diminuir o tempo total de execução quando comparado à versão serial.
 
 ---

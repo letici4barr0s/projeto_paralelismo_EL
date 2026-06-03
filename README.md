@@ -1,11 +1,12 @@
 # Relatório da Atividade: Simulação Paralela de Incêndio Florestal
 
 *Disciplina:* Programação Concorrente e Distribuída  
-*Aluno(s):* Ellen e Letícia de Oliveira Barros  
+*Aluno(s):* Ellen Vitorino e Letícia Barros  
 *Turma:* Sistemas de Informação - 5º semestre  
 *Professor:* Rafael Marconi  
 *Data:* 08/04/2026  
 
+---
 
 # 1. Descrição do Problema
 
@@ -18,16 +19,6 @@ Esse problema possui relação direta com situações reais. Em um país como o 
 A paralelização foi utilizada porque o volume de dados processado é muito grande. Foram testadas grades de `7000 x 7000` e `10000 x 10000`, o que corresponde, respectivamente, a 49.000.000 e 100.000.000 de células. Como cada passo da simulação precisa analisar a matriz, o custo computacional cresce rapidamente.
 
 O algoritmo utilizado é uma simulação baseada em grade com atualização iterativa por vizinhança. A complexidade aproximada é:
-
-```text
-O(P * H * W)
-```
-
-Onde:
-
-- `P` representa o número de passos executados;
-- `H` representa a altura da matriz;
-- `W` representa a largura da matriz.
 
 Na versão paralela, a matriz é dividida em faixas de linhas. Cada processo atualiza uma parte da floresta, e a comunicação ocorre por meio de memória compartilhada. O objetivo é diminuir o tempo total de execução quando comparado à versão serial.
 
@@ -53,16 +44,16 @@ Observação: o termo "serial" representa a execução sem paralelização e cor
 
 # 3. Metodologia de Testes
 
-O tempo de execução foi medido pela própria aplicação utilizando a função `time.perf_counter()` da linguagem Python. Ao final da simulação, o programa exibiu o número de passos executados, o tempo total, o tempo médio por passo e a quantidade de células queimadas.
+O tempo de execução foi medido pela própria aplicação utilizando a função `time.perf_counter()` da linguagem Python. Ao final da simulação, o programa exibiu o número de passos executados, o tempo total e a quantidade de células queimadas.
 
 Foram utilizadas duas entradas principais:
 
 - `7000 x 7000`, com 49.000.000 células e 7000 passos;
 - `10000 x 10000`, com 100.000.000 células e 10000 passos.
 
-Para cada tamanho de entrada, foram comparadas execuções em modo serial e em modo paralelo. No modo paralelo, foram testadas configurações com 2, 4, 8 e 10 processos. Para a grade `10000 x 10000`, o teste com 10 processos ainda não foi executado.
+Para cada tamanho de entrada, foram comparadas execuções em modo serial e em modo paralelo. No modo paralelo, foram testadas configurações com 2, 4, 8 e 10 processos.
 
-Como os valores disponíveis correspondem aos tempos obtidos nas execuções registradas, as tabelas apresentam o tempo medido em cada configuração. O tempo médio por passo é calculado pelo programa dividindo o tempo total pelo número de passos executados.
+Como os valores disponíveis correspondem aos tempos obtidos nas execuções registradas, as tabelas apresentam o tempo total medido em cada configuração.
 
 ---
 
@@ -72,42 +63,31 @@ Como os valores disponíveis correspondem aos tempos obtidos nas execuções reg
 
 Nesta entrada, a simulação processou 49.000.000 células durante 7000 passos. Ao final, 100% da floresta foi queimada.
 
-| Configuração | Processos | Tempo total (s) | Tempo médio por passo |
+| Configuração | Processos | Tempo total (s) | Tempo total (min) |
 | --- | ---: | ---: | ---: |
-| Serial | 1 | 590.73 | 84.4 ms |
-| Paralelo | 2 | 435.02 | 62.1 ms |
-| Paralelo | 4 | 309.28 | 44.2 ms |
-| Paralelo | 8 | 276.49 | 39.5 ms |
-| Paralelo | 10 | 268.91 | 38.4 ms |
+| Serial | 1 | 590.73 | 9.85 |
+| Paralelo | 2 | 435.02 | 7.25 |
+| Paralelo | 4 | 309.28 | 5.15 |
+| Paralelo | 8 | 276.49 | 4.61 |
+| Paralelo | 10 | 268.91 | 4.48 |
 
 ## 4.2 Entrada 10000 x 10000
 
 Nesta entrada, a simulação processou 100.000.000 células durante 10000 passos. Ao final, 100% da floresta foi queimada.
 
-| Configuração | Processos | Tempo total (s) | Tempo médio por passo |
+| Configuração | Processos | Tempo total (s) | Tempo total (min) |
 | --- | ---: | ---: | ---: |
-| Serial | 1 | 1777.82 | 177.8 ms |
-| Paralelo | 2 | 1406.39 | 140.6 ms |
-| Paralelo | 4 | 915.21 | 91.5 ms |
-| Paralelo | 8 | 826.33 | 82.6 ms |
-| Paralelo | 10 | A executar | A executar |
+| Serial | 1 | 1777.82 | 29.63 |
+| Paralelo | 2 | 1406.39 | 23.44 |
+| Paralelo | 4 | 915.21 | 15.25 |
+| Paralelo | 8 | 826.33 | 13.77 |
+| Paralelo | 10 | 868.07 | 14.47 |
 
 ---
 
 # 5. Tabela de Resultados e Cálculos
 
 O speedup mede quantas vezes a execução paralela foi mais rápida que a execução serial. A eficiência mede o aproveitamento dos processos utilizados.
-
-```text
-Speedup(p) = T(1) / T(p)
-Eficiência(p) = Speedup(p) / p
-```
-
-Onde:
-
-- `T(1)` é o tempo da execução serial;
-- `T(p)` é o tempo com `p` processos;
-- `p` é o número de processos utilizados.
 
 ## 5.1 Entrada 7000 x 7000
 
@@ -154,7 +134,7 @@ Eficiência(10) = 2.20 / 10 = 0.22
 | Paralelo | 2 | 1406.39 | 1.26 | 0.63 |
 | Paralelo | 4 | 915.21 | 1.94 | 0.49 |
 | Paralelo | 8 | 826.33 | 2.15 | 0.27 |
-| Paralelo | 10 | A executar | A executar | A executar |
+| Paralelo | 10 | 868.07 | 2.05 | 0.20 |
 
 ### Memorial de cálculo - 10000 x 10000
 
@@ -178,9 +158,10 @@ Eficiência(4) = 1.94 / 4 = 0.49
 
 Speedup(8) = 1777.82 / 826.33 = 2.15
 Eficiência(8) = 2.15 / 8 = 0.27
-```
 
-O cálculo para 10 processos na entrada `10000 x 10000` ainda não foi realizado porque o tempo dessa execução não foi medido.
+Speedup(10) = 1777.82 / 868.07 = 2.05
+Eficiência(10) = 2.05 / 10 = 0.20
+```
 
 ---
 
@@ -212,11 +193,11 @@ O gráfico abaixo mostra a eficiência da paralelização. A eficiência diminui
 
 Os resultados indicam que a paralelização trouxe ganho de desempenho nas duas entradas testadas. Para a grade `7000 x 7000`, o tempo caiu de 590.73 segundos na execução serial para 268.91 segundos com 10 processos. Isso representa um speedup de 2.20.
 
-Para a grade `10000 x 10000`, o tempo caiu de 1777.82 segundos na execução serial para 826.33 segundos com 8 processos. Nesse caso, o speedup foi de 2.15. O teste com 10 processos ainda precisa ser executado para completar a comparação dessa entrada.
+Para a grade `10000 x 10000`, o tempo caiu de 1777.82 segundos na execução serial para 826.33 segundos com 8 processos. Nesse caso, o speedup foi de 2.15. Com 10 processos, o tempo registrado foi de 868.07 segundos, resultando em speedup de 2.05.
 
-Apesar da redução no tempo total, o speedup obtido ficou abaixo do ideal. Em uma paralelização perfeita, 8 processos poderiam se aproximar de um speedup 8, e 10 processos poderiam se aproximar de um speedup 10. No entanto, os valores obtidos ficaram em torno de 2.15 e 2.20. Isso mostra que existem limitações no algoritmo e no ambiente de execução.
+Apesar da redução no tempo total, o speedup obtido ficou abaixo do ideal. Em uma paralelização perfeita, 8 processos poderiam se aproximar de um speedup 8, e 10 processos poderiam se aproximar de um speedup 10. No entanto, os valores obtidos ficaram em torno de 2.05, 2.15 e 2.20. Isso mostra que existem limitações no algoritmo e no ambiente de execução.
 
-A eficiência também caiu conforme o número de processos aumentou. Na entrada `7000 x 7000`, a eficiência foi de 0.68 com 2 processos, mas caiu para 0.22 com 10 processos. Na entrada `10000 x 10000`, a eficiência foi de 0.63 com 2 processos e caiu para 0.27 com 8 processos.
+A eficiência também caiu conforme o número de processos aumentou. Na entrada `7000 x 7000`, a eficiência foi de 0.68 com 2 processos, mas caiu para 0.22 com 10 processos. Na entrada `10000 x 10000`, a eficiência foi de 0.63 com 2 processos, chegou a 0.27 com 8 processos e caiu para 0.20 com 10 processos.
 
 Essa queda de eficiência pode ser explicada por fatores como:
 
@@ -236,13 +217,12 @@ Mesmo assim, a paralelização foi útil, pois reduziu significativamente o temp
 
 O projeto implementou uma simulação de incêndio florestal em grade bidimensional, comparando a execução serial com a execução paralela. A solução utiliza Python, NumPy e `multiprocessing` com memória compartilhada para dividir o processamento da matriz entre diferentes processos.
 
-Os resultados mostraram que o paralelismo reduziu o tempo de execução, principalmente nas entradas maiores. Na grade `7000 x 7000`, o melhor resultado foi obtido com 10 processos, reduzindo o tempo para 268.91 segundos. Na grade `10000 x 10000`, o melhor resultado registrado até o momento foi com 8 processos, com tempo de 826.33 segundos.
+Os resultados mostraram que o paralelismo reduziu o tempo de execução, principalmente nas entradas maiores. Na grade `7000 x 7000`, o melhor resultado foi obtido com 10 processos, reduzindo o tempo para 268.91 segundos. Na grade `10000 x 10000`, o melhor resultado foi obtido com 8 processos, com tempo de 826.33 segundos. A configuração com 10 processos ficou um pouco mais lenta, registrando 868.07 segundos.
 
 Entretanto, o ganho não foi linear. A eficiência diminuiu conforme o número de processos aumentou, indicando que o desempenho ficou limitado pelo overhead de paralelização, pelo acesso à memória e pela própria estrutura do algoritmo.
 
 Como melhorias futuras, podem ser realizadas:
 
-- executar o teste faltante de `10000 x 10000` com 10 processos;
 - repetir cada configuração mais de uma vez e calcular a média dos tempos;
 - otimizar o balanceamento de carga entre processos;
 - reduzir o custo de sincronização entre os passos;

@@ -271,9 +271,10 @@ Como melhorias futuras, poderiam ser realizadas:
 
 - repetir cada configuração mais de uma vez e calcular a média dos tempos;
 - testar a aplicação em máquinas com mais núcleos;
-- analisar o consumo de CPU e memória durante a execução;
 - otimizar ainda mais o acesso às matrizes;
 - comparar diferentes estratégias de divisão da grade;
 - testar outras abordagens de alto desempenho.
+
+Durante os testes, o uso da CPU também foi observado pelo Monitor de Atividade do macOS, confirmando que as execuções paralelas utilizavam mais de um núcleo.
 
 Conclui-se que a paralelização foi eficaz para melhorar o desempenho da simulação. O trabalho demonstra a importância da programação concorrente e distribuída em problemas computacionais de grande escala, especialmente em aplicações relacionadas a fenômenos ambientais, como a propagação de incêndios florestais.

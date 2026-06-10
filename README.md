@@ -1,7 +1,7 @@
 # Relatório da Atividade: Simulação Paralela de Incêndio Florestal
 
 *Disciplina:* Programação Concorrente e Distribuída  
-*Aluno(s):* Ellen Vitorino e Letícia Barros  
+*Aluno(s):* Ellen e Letícia de Oliveira Barros  
 *Turma:* Sistemas de Informação - 5º semestre  
 *Professor:* Rafael Marconi  
 *Data:* 08/04/2026  
@@ -10,50 +10,79 @@
 
 # 1. Descrição do Problema
 
-O projeto desenvolvido implementa uma simulação de propagação de incêndio florestal em uma grade bidimensional. A floresta é representada por uma matriz, na qual cada célula corresponde a uma pequena região do ambiente simulado. Cada posição da matriz pode assumir um estado diferente: vazio, árvore, fogo ou queimado.
+O projeto desenvolvido implementa uma simulação de propagação de incêndio florestal em uma grade bidimensional. A floresta é representada por uma matriz, na qual cada célula corresponde a uma pequena região do ambiente simulado.
 
-O objetivo do programa é acompanhar a evolução do fogo ao longo de vários passos de simulação. A cada passo, o algoritmo verifica o estado atual das células e calcula o próximo estado da floresta. Uma árvore pode pegar fogo quando existe fogo em sua vizinhança, enquanto uma célula que estava em chamas passa para o estado de queimada. O código também inclui fatores de variação, como influência dos vizinhos, vento, terreno e aleatoriedade local, tornando a propagação menos uniforme.
+Cada posição da matriz pode assumir um dos seguintes estados:
 
-Esse problema possui relação direta com situações reais. Em um país como o Brasil, onde existem grandes áreas de vegetação na Amazônia, no Cerrado, no Pantanal e em outras regiões, simulações desse tipo podem auxiliar estudos sobre comportamento do fogo, risco ambiental e planejamento de combate a incêndios. Embora o programa seja uma simplificação, ele demonstra como modelos computacionais podem representar fenômenos naturais e apoiar análises em larga escala.
+- vazio;
+- árvore;
+- fogo;
+- queimado.
 
-A paralelização foi utilizada porque o volume de dados processado é muito grande. Foram testadas grades de `7000 x 7000` e `10000 x 10000`, o que corresponde, respectivamente, a 49.000.000 e 100.000.000 de células. Como cada passo da simulação precisa analisar a matriz, o custo computacional cresce rapidamente.
+O objetivo do programa é acompanhar a evolução do fogo ao longo de vários passos de simulação. A cada passo, o algoritmo percorre a matriz e verifica o estado das células. Uma célula com árvore pode entrar em combustão quando existe fogo em sua vizinhança. Já uma célula que estava em chamas passa para o estado de queimada no passo seguinte.
+
+Esse tipo de simulação possui relação direta com problemas reais. No Brasil, regiões como a Amazônia, o Cerrado e o Pantanal sofrem com queimadas recorrentes, que podem causar danos ambientais, sociais e econômicos. Embora o modelo implementado seja uma simplificação, ele permite compreender como técnicas computacionais podem ser utilizadas para estudar a propagação do fogo em grandes áreas.
+
+Em aplicações reais, simulações desse tipo podem auxiliar na análise de risco, no planejamento de combate a incêndios, na definição de áreas prioritárias de monitoramento e no estudo do impacto da propagação do fogo sobre diferentes regiões de vegetação.
+
+A paralelização foi aplicada porque o volume de dados processado é muito grande. Foram utilizadas entradas de `7000 x 7000` e `10000 x 10000`, o que corresponde, respectivamente, a 49.000.000 e 100.000.000 de células. Como cada passo da simulação precisa analisar a matriz, o custo computacional cresce rapidamente.
 
 O algoritmo utilizado é uma simulação baseada em grade com atualização iterativa por vizinhança. A complexidade aproximada é:
 
-Na versão paralela, a matriz é dividida em faixas de linhas. Cada processo atualiza uma parte da floresta, e a comunicação ocorre por meio de memória compartilhada. O objetivo é diminuir o tempo total de execução quando comparado à versão serial.
+```text
+O(P * H * W)
+```
+
+Onde:
+
+- `P` representa o número de passos executados;
+- `H` representa a altura da matriz;
+- `W` representa a largura da matriz.
+
+O objetivo da paralelização é dividir o processamento da matriz entre diferentes núcleos, reduzindo o tempo total de execução quando comparado à versão sequencial.
 
 ---
 
 # 2. Ambiente Experimental
 
-Os experimentos foram realizados em um MacBook Air com 16 GB de memória RAM. O projeto foi implementado em Python, utilizando NumPy para manipulação das matrizes e `multiprocessing` com `shared_memory` para a execução paralela.
+Os experimentos foram realizados em um MacBook Air com 16 GB de memória RAM. O sistema possui 10 núcleos disponíveis para execução, conforme identificado pela própria aplicação durante os testes.
 
 | Item | Descrição |
 | --- | --- |
 | Computador | MacBook Air |
+| Processador | Apple Silicon |
+| Número de núcleos disponíveis | 10 |
 | Memória RAM | 16 GB |
 | Sistema Operacional | macOS |
 | Linguagem utilizada | Python |
-| Biblioteca de paralelização | `multiprocessing` + `shared_memory` |
-| Bibliotecas auxiliares | NumPy, Matplotlib e Streamlit |
-| Configurações testadas | Serial, 2, 4, 8 e 10 processos |
+| Bibliotecas utilizadas | NumPy e Numba |
+| Estratégia de paralelização | Paralelização por múltiplos núcleos com Numba |
+| Configurações testadas | Serial, 2, 4, 8 e 10 núcleos |
 
-Observação: o termo "serial" representa a execução sem paralelização e corresponde ao tempo base `T(1)` utilizado no cálculo de speedup.
+A execução serial foi utilizada como tempo base `T(1)` para o cálculo de speedup e eficiência.
 
 ---
 
 # 3. Metodologia de Testes
 
-O tempo de execução foi medido pela própria aplicação utilizando a função `time.perf_counter()` da linguagem Python. Ao final da simulação, o programa exibiu o número de passos executados, o tempo total e a quantidade de células queimadas.
+O tempo de execução foi medido pela própria aplicação utilizando a função `time.perf_counter()` da linguagem Python. Essa função permite medir intervalos de tempo com boa precisão durante a execução do programa.
 
 Foram utilizadas duas entradas principais:
 
-- `7000 x 7000`, com 49.000.000 células e 7000 passos;
-- `10000 x 10000`, com 100.000.000 células e 10000 passos.
+- `7000 x 7000`, com 49.000.000 células;
+- `10000 x 10000`, com 100.000.000 células.
 
-Para cada tamanho de entrada, foram comparadas execuções em modo serial e em modo paralelo. No modo paralelo, foram testadas configurações com 2, 4, 8 e 10 processos.
+Para cada entrada, foram realizadas execuções nas seguintes configurações:
 
-Como os valores disponíveis correspondem aos tempos obtidos nas execuções registradas, as tabelas apresentam o tempo total medido em cada configuração.
+- execução serial;
+- execução paralela com 2 núcleos;
+- execução paralela com 4 núcleos;
+- execução paralela com 8 núcleos;
+- execução paralela com 10 núcleos.
+
+A densidade da floresta foi mantida em 75%, ou seja, aproximadamente 75% das células da grade representam árvores. Por isso, ao final da simulação, a quantidade de células queimadas fica próxima de 75% da matriz total, pois as células vazias não representam vegetação.
+
+O tamanho da entrada foi mantido constante dentro de cada grupo de teste, permitindo comparar o impacto do aumento no número de núcleos sobre o tempo total de execução.
 
 ---
 
@@ -61,44 +90,52 @@ Como os valores disponíveis correspondem aos tempos obtidos nas execuções reg
 
 ## 4.1 Entrada 7000 x 7000
 
-Nesta entrada, a simulação processou 49.000.000 células durante 7000 passos. Ao final, 100% da floresta foi queimada.
+Nesta entrada, a simulação processou uma matriz com 49.000.000 células.
 
-| Configuração | Processos | Tempo total (s) | Tempo total (min) |
+| Configuração | Núcleos | Tempo total (s) | Tempo total (min) |
 | --- | ---: | ---: | ---: |
-| Serial | 1 | 590.73 | 9.85 |
-| Paralelo | 2 | 435.02 | 7.25 |
-| Paralelo | 4 | 309.28 | 5.15 |
-| Paralelo | 8 | 276.49 | 4.61 |
-| Paralelo | 10 | 268.91 | 4.48 |
+| Serial | 1 | 596.37 | 9.94 |
+| Paralelo | 2 | 298.77 | 4.98 |
+| Paralelo | 4 | 178.32 | 2.97 |
+| Paralelo | 8 | 114.71 | 1.91 |
+| Paralelo | 10 | 102.34 | 1.71 |
 
 ## 4.2 Entrada 10000 x 10000
 
-Nesta entrada, a simulação processou 100.000.000 células durante 10000 passos. Ao final, 100% da floresta foi queimada.
+Nesta entrada, a simulação processou uma matriz com 100.000.000 células.
 
-| Configuração | Processos | Tempo total (s) | Tempo total (min) |
+| Configuração | Núcleos | Tempo total (s) | Tempo total (min) |
 | --- | ---: | ---: | ---: |
-| Serial | 1 | 1777.82 | 29.63 |
-| Paralelo | 2 | 1406.39 | 23.44 |
-| Paralelo | 4 | 915.21 | 15.25 |
-| Paralelo | 8 | 826.33 | 13.77 |
-| Paralelo | 10 | 868.07 | 14.47 |
+| Serial | 1 | 1676.49 | 27.94 |
+| Paralelo | 2 | 926.25 | 15.44 |
+| Paralelo | 4 | 630.53 | 10.51 |
+| Paralelo | 8 | 389.39 | 6.49 |
+| Paralelo | 10 | 340.56 | 5.68 |
 
 ---
 
 # 5. Cálculo de Speedup e Eficiência
 
-O speedup mede quantas vezes a execução paralela foi mais rápida que a execução serial. A eficiência mede o aproveitamento dos processos utilizados.
+O speedup mede quantas vezes a execução paralela foi mais rápida que a execução serial.
 
 ```text
 Speedup(p) = T(1) / T(p)
-Eficiência(p) = Speedup(p) / p
 ```
 
 Onde:
 
 - `T(1)` é o tempo da execução serial;
-- `T(p)` é o tempo com `p` processos;
-- `p` é o número de processos utilizados.
+- `T(p)` é o tempo da execução com `p` núcleos.
+
+A eficiência mede o aproveitamento dos núcleos utilizados.
+
+```text
+Eficiência(p) = Speedup(p) / p
+```
+
+Onde:
+
+- `p` é o número de núcleos utilizados.
 
 ---
 
@@ -106,83 +143,67 @@ Onde:
 
 ## 6.1 Entrada 7000 x 7000
 
-| Configuração | Processos | Tempo (s) | Speedup | Eficiência |
+| Configuração | Núcleos | Tempo (s) | Speedup | Eficiência |
 | --- | ---: | ---: | ---: | ---: |
-| Serial | 1 | 590.73 | 1.00 | 1.00 |
-| Paralelo | 2 | 435.02 | 1.36 | 0.68 |
-| Paralelo | 4 | 309.28 | 1.91 | 0.48 |
-| Paralelo | 8 | 276.49 | 2.14 | 0.27 |
-| Paralelo | 10 | 268.91 | 2.20 | 0.22 |
+| Serial | 1 | 596.37 | 1.00 | 1.00 |
+| Paralelo | 2 | 298.77 | 2.00 | 1.00 |
+| Paralelo | 4 | 178.32 | 3.34 | 0.84 |
+| Paralelo | 8 | 114.71 | 5.20 | 0.65 |
+| Paralelo | 10 | 102.34 | 5.83 | 0.58 |
 
 ### Memorial de cálculo - 7000 x 7000
 
-Tempo serial utilizado como base:
-
 ```text
-T(1) = 590.73 s
-```
+T(1) = 596.37 s
 
-Cálculos:
+Speedup(2) = 596.37 / 298.77 = 2.00
+Eficiência(2) = 2.00 / 2 = 1.00
 
-```text
-Speedup(1) = 590.73 / 590.73 = 1.00
-Eficiência(1) = 1.00 / 1 = 1.00
+Speedup(4) = 596.37 / 178.32 = 3.34
+Eficiência(4) = 3.34 / 4 = 0.84
 
-Speedup(2) = 590.73 / 435.02 = 1.36
-Eficiência(2) = 1.36 / 2 = 0.68
+Speedup(8) = 596.37 / 114.71 = 5.20
+Eficiência(8) = 5.20 / 8 = 0.65
 
-Speedup(4) = 590.73 / 309.28 = 1.91
-Eficiência(4) = 1.91 / 4 = 0.48
-
-Speedup(8) = 590.73 / 276.49 = 2.14
-Eficiência(8) = 2.14 / 8 = 0.27
-
-Speedup(10) = 590.73 / 268.91 = 2.20
-Eficiência(10) = 2.20 / 10 = 0.22
+Speedup(10) = 596.37 / 102.34 = 5.83
+Eficiência(10) = 5.83 / 10 = 0.58
 ```
 
 ## 6.2 Entrada 10000 x 10000
 
-| Configuração | Processos | Tempo (s) | Speedup | Eficiência |
+| Configuração | Núcleos | Tempo (s) | Speedup | Eficiência |
 | --- | ---: | ---: | ---: | ---: |
-| Serial | 1 | 1777.82 | 1.00 | 1.00 |
-| Paralelo | 2 | 1406.39 | 1.26 | 0.63 |
-| Paralelo | 4 | 915.21 | 1.94 | 0.49 |
-| Paralelo | 8 | 826.33 | 2.15 | 0.27 |
-| Paralelo | 10 | 868.07 | 2.05 | 0.20 |
+| Serial | 1 | 1676.49 | 1.00 | 1.00 |
+| Paralelo | 2 | 926.25 | 1.81 | 0.90 |
+| Paralelo | 4 | 630.53 | 2.66 | 0.66 |
+| Paralelo | 8 | 389.39 | 4.31 | 0.54 |
+| Paralelo | 10 | 340.56 | 4.92 | 0.49 |
 
 ### Memorial de cálculo - 10000 x 10000
 
-Tempo serial utilizado como base:
-
 ```text
-T(1) = 1777.82 s
-```
+T(1) = 1676.49 s
 
-Cálculos:
+Speedup(2) = 1676.49 / 926.25 = 1.81
+Eficiência(2) = 1.81 / 2 = 0.90
 
-```text
-Speedup(1) = 1777.82 / 1777.82 = 1.00
-Eficiência(1) = 1.00 / 1 = 1.00
+Speedup(4) = 1676.49 / 630.53 = 2.66
+Eficiência(4) = 2.66 / 4 = 0.66
 
-Speedup(2) = 1777.82 / 1406.39 = 1.26
-Eficiência(2) = 1.26 / 2 = 0.63
+Speedup(8) = 1676.49 / 389.39 = 4.31
+Eficiência(8) = 4.31 / 8 = 0.54
 
-Speedup(4) = 1777.82 / 915.21 = 1.94
-Eficiência(4) = 1.94 / 4 = 0.49
-
-Speedup(8) = 1777.82 / 826.33 = 2.15
-Eficiência(8) = 2.15 / 8 = 0.27
-
-Speedup(10) = 1777.82 / 868.07 = 2.05
-Eficiência(10) = 2.05 / 10 = 0.20
+Speedup(10) = 1676.49 / 340.56 = 4.92
+Eficiência(10) = 4.92 / 10 = 0.49
 ```
 
 ---
 
 # 7. Gráfico de Tempo de Execução
 
-O gráfico abaixo mostra o tempo total de execução em função do número de processos. Observa-se que o aumento no número de processos reduz o tempo total, mas a redução fica menor conforme mais processos são adicionados.
+O gráfico abaixo apresenta o tempo total de execução em função do número de núcleos utilizados.
+
+Observa-se que, nas duas entradas, o aumento no número de núcleos reduziu o tempo total de execução. A redução foi mais evidente nas configurações com maior número de núcleos, principalmente na entrada `10000 x 10000`.
 
 ![Gráfico de tempo de execução](grafico_tempo_execucao.png)
 
@@ -190,7 +211,9 @@ O gráfico abaixo mostra o tempo total de execução em função do número de p
 
 # 8. Gráfico de Speedup
 
-O gráfico abaixo mostra o speedup obtido em comparação com a execução serial. A linha ideal representa o crescimento linear esperado em uma paralelização perfeita.
+O gráfico abaixo apresenta o speedup obtido em cada configuração, comparando os tempos paralelos com a execução serial.
+
+A linha ideal representa o comportamento esperado em uma paralelização perfeita. Nesse caso, o speedup cresceria proporcionalmente ao número de núcleos. Na prática, os resultados ficaram abaixo da linha ideal, mas ainda apresentaram ganho significativo.
 
 ![Gráfico de speedup](grafico_speedup.png)
 
@@ -198,49 +221,59 @@ O gráfico abaixo mostra o speedup obtido em comparação com a execução seria
 
 # 9. Gráfico de Eficiência
 
+O gráfico abaixo apresenta a eficiência da paralelização.
+
+A eficiência tende a diminuir conforme o número de núcleos aumenta. Isso ocorre porque, embora mais núcleos estejam disponíveis, também aumenta o custo de coordenação, sincronização e acesso à memória.
+
 ![Gráfico de eficiência](grafico_eficiencia.png)
 
 ---
 
 # 10. Análise dos Resultados
 
-Os resultados indicam que a paralelização trouxe ganho de desempenho nas duas entradas testadas. Para a grade `7000 x 7000`, o tempo caiu de 590.73 segundos na execução serial para 268.91 segundos com 10 processos. Isso representa um speedup de 2.20.
+Os resultados mostram que a paralelização trouxe ganho significativo de desempenho nas duas entradas testadas.
 
-Para a grade `10000 x 10000`, o tempo caiu de 1777.82 segundos na execução serial para 826.33 segundos com 8 processos. Nesse caso, o speedup foi de 2.15. Com 10 processos, o tempo registrado foi de 868.07 segundos, resultando em speedup de 2.05.
+Na entrada `7000 x 7000`, o tempo de execução caiu de 596.37 segundos na versão serial para 102.34 segundos com 10 núcleos. Isso representa uma redução de aproximadamente 9.94 minutos para 1.71 minuto. O speedup obtido com 10 núcleos foi de 5.83.
 
-Apesar da redução no tempo total, o speedup obtido ficou abaixo do ideal. Em uma paralelização perfeita, 8 processos poderiam se aproximar de um speedup 8, e 10 processos poderiam se aproximar de um speedup 10. No entanto, os valores obtidos ficaram em torno de 2.05, 2.15 e 2.20. Isso mostra que existem limitações no algoritmo e no ambiente de execução.
+Na entrada `10000 x 10000`, o tempo caiu de 1676.49 segundos na versão serial para 340.56 segundos com 10 núcleos. Isso representa uma redução de aproximadamente 27.94 minutos para 5.68 minutos. O speedup obtido com 10 núcleos foi de 4.92.
 
-A eficiência também caiu conforme o número de processos aumentou. Na entrada `7000 x 7000`, a eficiência foi de 0.68 com 2 processos, mas caiu para 0.22 com 10 processos. Na entrada `10000 x 10000`, a eficiência foi de 0.63 com 2 processos, chegou a 0.27 com 8 processos e caiu para 0.20 com 10 processos.
+Embora o speedup não tenha sido linear, os resultados demonstram que o paralelismo foi eficaz. Em uma situação ideal, o uso de 10 núcleos poderia gerar um speedup próximo de 10. No entanto, na prática, existem limitações que impedem esse crescimento perfeito.
 
-Essa queda de eficiência pode ser explicada por fatores como:
+Entre os principais fatores que explicam essa diferença estão:
 
-- custo de criação e gerenciamento dos processos;
-- sincronização necessária a cada passo da simulação;
-- acesso intenso à memória compartilhada;
-- leitura e escrita em matrizes muito grandes;
-- divisão da grade em faixas de linhas;
-- partes do algoritmo que não se beneficiam totalmente da paralelização;
-- overhead causado pela coordenação entre os processos.
+- custo de criação e gerenciamento das tarefas paralelas;
+- sincronização necessária entre os passos da simulação;
+- acesso intenso à memória;
+- leitura e escrita de matrizes muito grandes;
+- disputa por cache e largura de banda de memória;
+- partes do algoritmo que não escalam perfeitamente;
+- overhead causado pela coordenação entre os núcleos.
 
-Mesmo assim, a paralelização foi útil, pois reduziu significativamente o tempo total de execução em entradas grandes. Esse resultado é importante porque simulações ambientais com milhões de células exigem alto poder computacional. Em cenários reais, como o estudo de incêndios em florestas brasileiras, a capacidade de processar grandes áreas pode ajudar na análise de risco e no planejamento de ações preventivas.
+Mesmo com essas limitações, a redução do tempo total foi expressiva. O caso mais relevante foi a entrada `10000 x 10000`, em que a execução passou de 27.94 minutos para 5.68 minutos. Isso mostra que o paralelismo se torna especialmente importante em problemas com grande volume de dados.
+
+Outro ponto observado é que a eficiência diminui conforme mais núcleos são utilizados. Esse comportamento é esperado em aplicações paralelas, pois o ganho adicional tende a ser menor à medida que o número de núcleos cresce. Ainda assim, os resultados indicam que o uso de múltiplos núcleos foi vantajoso para o problema estudado.
+
+No contexto de uma simulação ambiental, esse ganho é importante. Em cenários reais, como o estudo de incêndios em grandes regiões de vegetação brasileira, a capacidade de processar grandes matrizes em menos tempo pode contribuir para análises mais rápidas e para o planejamento de estratégias de prevenção e combate.
 
 ---
 
 # 11. Conclusão
 
-O projeto implementou uma simulação de incêndio florestal em grade bidimensional, comparando a execução serial com a execução paralela. A solução utiliza Python, NumPy e `multiprocessing` com memória compartilhada para dividir o processamento da matriz entre diferentes processos.
+O projeto implementou uma simulação de propagação de incêndio florestal em grade bidimensional, comparando a execução serial com a execução paralela. A aplicação utilizou Python, NumPy e Numba para processar matrizes de grande dimensão e distribuir o trabalho entre múltiplos núcleos.
 
-Os resultados mostraram que o paralelismo reduziu o tempo de execução, principalmente nas entradas maiores. Na grade `7000 x 7000`, o melhor resultado foi obtido com 10 processos, reduzindo o tempo para 268.91 segundos. Na grade `10000 x 10000`, o melhor resultado foi obtido com 8 processos, com tempo de 826.33 segundos. A configuração com 10 processos ficou um pouco mais lenta, registrando 868.07 segundos.
+Os resultados demonstraram que a paralelização reduziu de forma significativa o tempo de execução. Na entrada `7000 x 7000`, o tempo caiu de 596.37 segundos para 102.34 segundos com 10 núcleos. Na entrada `10000 x 10000`, o tempo caiu de 1676.49 segundos para 340.56 segundos com 10 núcleos.
 
-Entretanto, o ganho não foi linear. A eficiência diminuiu conforme o número de processos aumentou, indicando que o desempenho ficou limitado pelo overhead de paralelização, pelo acesso à memória e pela própria estrutura do algoritmo.
+O maior ganho absoluto ocorreu na entrada `10000 x 10000`, reduzindo o tempo de aproximadamente 27.94 minutos para 5.68 minutos. Isso evidencia que o paralelismo é especialmente útil quando o volume de dados é elevado.
 
-Como melhorias futuras, podem ser realizadas:
+Apesar disso, o speedup não foi linear. A eficiência diminuiu conforme o número de núcleos aumentou, o que é esperado devido ao overhead de paralelização, ao acesso à memória e às limitações naturais do algoritmo.
+
+Como melhorias futuras, poderiam ser realizadas:
 
 - repetir cada configuração mais de uma vez e calcular a média dos tempos;
-- otimizar o balanceamento de carga entre processos;
-- reduzir o custo de sincronização entre os passos;
-- aprimorar o uso de memória compartilhada;
-- testar otimizações com Numba ou outras abordagens de alto desempenho;
-- executar a simulação em máquinas com maior quantidade de núcleos e memória RAM.
+- testar a aplicação em máquinas com mais núcleos;
+- analisar o consumo de CPU e memória durante a execução;
+- otimizar ainda mais o acesso às matrizes;
+- comparar diferentes estratégias de divisão da grade;
+- testar outras abordagens de alto desempenho.
 
-Conclui-se que a paralelização foi eficaz para melhorar o desempenho da simulação, mas apresentou limites práticos. O estudo demonstra a importância do paralelismo para problemas computacionais de grande escala e mostra como esse tipo de técnica pode ser aplicado em simulações relacionadas a problemas ambientais reais.
+Conclui-se que a paralelização foi eficaz para melhorar o desempenho da simulação. O trabalho demonstra a importância da programação concorrente e distribuída em problemas computacionais de grande escala, especialmente em aplicações relacionadas a fenômenos ambientais, como a propagação de incêndios florestais.
